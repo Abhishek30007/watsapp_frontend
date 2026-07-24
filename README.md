@@ -18,12 +18,12 @@ A React + Vite frontend for **CelebrateMate**, a real-time event reminder app wi
 
 ### 1. Clone and install
 ```bash
-git clone https://github.com/Abhishek30007/social_frontend.git
-cd social_frontend
+git clone https://github.com/Abhishek30007/watsapp_frontend.git
+cd watsapp_frontend
 npm install
 ```
 
-### 2. Make sure the backend is running at `https://social-backend-umgh.onrender.com`
+### 2. Make sure the backend is running at `https://watsapp-backend-td8c.onrender.com`
 
 ### 3. Start the dev server
 ```bash
@@ -33,5 +33,6 @@ npm run dev
 Frontend runs on `https://social-frontend-git-main-abhishek30007s-projects.vercel.app/`
 
 ## Environment
-The API base URL is hardcoded to `https://social-backend-umgh.onrender.com/api` in the components.
+The API base URL is hardcoded to `https://watsapp-backend-td8c.onrender.com/api` in the components.
 If you deploy the backend elsewhere, update `API_BASE` in each component.
+
