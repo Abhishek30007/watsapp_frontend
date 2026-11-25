@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-  User, Smartphone, Mail, Calendar, Clock,
+  User, Smartphone, Calendar, Clock,
   ChevronRight, ChevronLeft, Sparkles, Send,
-  Trash2, Edit, CheckSquare, Square, Check, Wand2
+  Trash2, Edit, CheckSquare, Square, Check, Wand2, MessageCircle
 } from 'lucide-react';
 import { API_BASE } from '../config';
 
@@ -18,7 +18,6 @@ export default function WishesScheduler({ wishes, loading, onAddOrUpdate, onDele
   // Form states
   const [contactName, setContactName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [email, setEmail] = useState('');
   const [category, setCategory] = useState('Birthday');
   
   // AI fields
@@ -33,18 +32,15 @@ export default function WishesScheduler({ wishes, loading, onAddOrUpdate, onDele
 
   // Channels
   const [whatsappEnabled, setWhatsappEnabled] = useState(true);
-  const [smsEnabled, setSmsEnabled] = useState(false);
-  const [emailEnabled, setEmailEnabled] = useState(false);
 
   // Quick states for test buttons
-  const [testingId, setTestingId] = useState(null); // { id, channel }
+  const [testingId, setTestingId] = useState(null);
 
   // Load details if editing
   const startEdit = (wish) => {
     setEditingId(wish._id);
     setContactName(wish.contactName);
     setPhoneNumber(wish.phoneNumber);
-    setEmail(wish.email);
     setCategory(wish.category || 'Birthday');
     setGeneratedMessage(wish.generatedMessage);
     
@@ -60,9 +56,7 @@ export default function WishesScheduler({ wishes, loading, onAddOrUpdate, onDele
     }
     
     setScheduledTime(wish.scheduledTime || '09:00');
-    setWhatsappEnabled(wish.channels?.whatsapp !== false);
-    setSmsEnabled(!!wish.channels?.sms);
-    setEmailEnabled(!!wish.channels?.email);
+    setWhatsappEnabled(true);
     
     setStep(1); // start at step 1 but loaded
     addToast(`Editing scheduled wish for ${wish.contactName}`, 'success');
@@ -76,7 +70,6 @@ export default function WishesScheduler({ wishes, loading, onAddOrUpdate, onDele
   const resetForm = () => {
     setContactName('');
     setPhoneNumber('');
-    setEmail('');
     setCategory('Birthday');
     setRelationship('Best Friend');
     setTone('Emotional');
@@ -84,8 +77,6 @@ export default function WishesScheduler({ wishes, loading, onAddOrUpdate, onDele
     setScheduledDate('');
     setScheduledTime('09:00');
     setWhatsappEnabled(true);
-    setSmsEnabled(false);
-    setEmailEnabled(false);
     setStep(1);
   };
 
@@ -116,7 +107,6 @@ export default function WishesScheduler({ wishes, loading, onAddOrUpdate, onDele
     if (s === 1) {
       if (!contactName.trim()) return 'Recipient name is required.';
       if (!/^\+[1-9]\d{1,14}$/.test(phoneNumber)) return 'Please provide a valid E.164 phone number (e.g. +919876543210).';
-      if (!/^\S+@\S+\.\S+$/.test(email)) return 'Please provide a valid email address.';
     }
     if (s === 2) {
       if (!generatedMessage.trim()) return 'Please generate or write a greeting message.';
@@ -152,15 +142,12 @@ export default function WishesScheduler({ wishes, loading, onAddOrUpdate, onDele
     const payload = {
       contactName,
       phoneNumber,
-      email,
       category,
       scheduledDate: new Date(scheduledDate),
       scheduledTime,
       generatedMessage,
       channels: {
-        whatsapp: whatsappEnabled,
-        sms: smsEnabled,
-        email: emailEnabled
+        whatsapp: true
       },
       status: 'PENDING'
     };
@@ -174,14 +161,13 @@ export default function WishesScheduler({ wishes, loading, onAddOrUpdate, onDele
     setEditingId(null);
   };
 
-  const handleQuickTest = async (wishId, channel) => {
-    setTestingId({ id: wishId, channel });
-    addToast(`Triggering manual ${channel} test...`, 'success');
+  const handleQuickTest = async (wishId) => {
+    setTestingId(wishId);
+    addToast('Triggering manual WhatsApp test...', 'success');
     try {
-      const endpoint = channel === 'WhatsApp' ? 'test-whatsapp' : channel === 'SMS' ? 'test-sms' : 'test-email';
-      const res = await axios.post(`${API_BASE}/wishes/${wishId}/${endpoint}`);
+      const res = await axios.post(`${API_BASE}/wishes/${wishId}/test-whatsapp`);
       if (res.data.success) {
-        addToast(`✅ ${channel} test successfully delivered!`, 'success');
+        addToast('✅ WhatsApp test successfully delivered!', 'success');
       } else {
         throw new Error(res.data.message);
       }
@@ -257,15 +243,7 @@ export default function WishesScheduler({ wishes, loading, onAddOrUpdate, onDele
                     value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)}
                     required
                   />
-                  <small style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Include country code prefix.</small>
-                </div>
-                <div className="form-group">
-                  <label className="form-label"><Mail size={12} style={{ marginRight: '4px' }} /> Email Address</label>
-                  <input
-                    type="email" placeholder="e.g. priya@gmail.com" className="form-control"
-                    value={email} onChange={e => setEmail(e.target.value)}
-                    required
-                  />
+                  <small style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Include country code prefix for WhatsApp dispatch.</small>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Event Category</label>
@@ -345,64 +323,25 @@ export default function WishesScheduler({ wishes, loading, onAddOrUpdate, onDele
             {/* Step 4: Channels */}
             {step === 4 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <label className="form-label">Choose Dispatch Channels</label>
+                <label className="form-label">Dispatch Channel</label>
                 
                 {/* WhatsApp Primary */}
                 <div 
-                  onClick={() => setWhatsappEnabled(!whatsappEnabled)}
                   style={{
-                    display: 'flex', alignItems: 'center', padding: '0.75rem 1rem',
-                    background: whatsappEnabled ? 'rgba(16, 185, 129, 0.08)' : 'rgba(255,255,255,0.02)',
-                    border: whatsappEnabled ? '1px solid rgba(16, 185, 129, 0.25)' : '1px solid rgba(255,255,255,0.06)',
-                    borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', justifyContent: 'space-between'
+                    display: 'flex', alignItems: 'center', padding: '0.85rem 1rem',
+                    background: 'rgba(16, 185, 129, 0.08)',
+                    border: '1px solid rgba(16, 185, 129, 0.25)',
+                    borderRadius: '8px', justifyContent: 'space-between'
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <CheckSquare size={16} style={{ color: whatsappEnabled ? 'var(--accent-emerald)' : 'var(--text-muted)' }} />
+                    <MessageCircle size={18} style={{ color: 'var(--accent-emerald)' }} />
                     <div>
-                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>WhatsApp Notification</div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>PRIMARY: Wappfly message gateway</div>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>WhatsApp Notification</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Automated delivery via Twilio & Wappfly gateway</div>
                     </div>
                   </div>
-                  <span className="badge badge-emerald" style={{ fontSize: '0.65rem' }}>Primary</span>
-                </div>
-
-                {/* SMS TextBee */}
-                <div 
-                  onClick={() => setSmsEnabled(!smsEnabled)}
-                  style={{
-                    display: 'flex', alignItems: 'center', padding: '0.75rem 1rem',
-                    background: smsEnabled ? 'rgba(147, 51, 234, 0.08)' : 'rgba(255,255,255,0.02)',
-                    border: smsEnabled ? '1px solid rgba(147, 51, 234, 0.25)' : '1px solid rgba(255,255,255,0.06)',
-                    borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', justifyContent: 'space-between'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    {smsEnabled ? <CheckSquare size={16} style={{ color: 'var(--accent-purple)' }} /> : <Square size={16} style={{ color: 'var(--text-muted)' }} />}
-                    <div>
-                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>SMS Alert</div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>SECONDARY: TextBee SMS gateway</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Email Nodemailer */}
-                <div 
-                  onClick={() => setEmailEnabled(!emailEnabled)}
-                  style={{
-                    display: 'flex', alignItems: 'center', padding: '0.75rem 1rem',
-                    background: emailEnabled ? 'rgba(59, 130, 246, 0.08)' : 'rgba(255,255,255,0.02)',
-                    border: emailEnabled ? '1px solid rgba(59, 130, 246, 0.25)' : '1px solid rgba(255,255,255,0.06)',
-                    borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', justifyContent: 'space-between'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    {emailEnabled ? <CheckSquare size={16} style={{ color: '#60a5fa' }} /> : <Square size={16} style={{ color: 'var(--text-muted)' }} />}
-                    <div>
-                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>Email Dispatch</div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>SECONDARY: Gmail SMTP delivery</div>
-                    </div>
-                  </div>
+                  <span className="badge badge-emerald" style={{ fontSize: '0.65rem' }}>Active</span>
                 </div>
               </div>
             )}
@@ -465,8 +404,6 @@ export default function WishesScheduler({ wishes, loading, onAddOrUpdate, onDele
                         <h3 className="card-title" style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700 }}>{wish.contactName}</h3>
                         <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', gap: '8px', marginTop: '4px' }}>
                           <span>{wish.phoneNumber}</span>
-                          <span>·</span>
-                          <span>{wish.email}</span>
                         </div>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
@@ -480,11 +417,9 @@ export default function WishesScheduler({ wishes, loading, onAddOrUpdate, onDele
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                      {/* Active Channels */}
+                      {/* Active Channel */}
                       <div style={{ display: 'flex', gap: '4px' }}>
-                        {wish.channels?.whatsapp && <span className="badge badge-emerald" style={{ fontSize: '0.65rem' }}>WhatsApp</span>}
-                        {wish.channels?.sms && <span className="badge badge-purple" style={{ fontSize: '0.65rem' }}>SMS</span>}
-                        {wish.channels?.email && <span className="badge badge-blue" style={{ fontSize: '0.65rem' }}>Email</span>}
+                        <span className="badge badge-emerald" style={{ fontSize: '0.65rem' }}>WhatsApp</span>
                       </div>
 
                       {/* Scheduled Date/Time */}
@@ -498,31 +433,15 @@ export default function WishesScheduler({ wishes, loading, onAddOrUpdate, onDele
 
                     {/* Actions Panel */}
                     <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.75rem', marginTop: '0.75rem', justifyContent: 'space-between' }}>
-                      {/* Quick Test Triggers */}
+                      {/* Quick Test Trigger */}
                       <div style={{ display: 'flex', gap: '6px' }}>
                         <button
                           className="btn"
-                          onClick={() => handleQuickTest(wish._id, 'WhatsApp')}
+                          onClick={() => handleQuickTest(wish._id)}
                           disabled={isTesting}
-                          style={{ fontSize: '0.72rem', padding: '4px 8px', background: 'rgba(16, 185, 129, 0.08)', color: '#34d399', border: '1px solid rgba(16,185,129,0.15)' }}
+                          style={{ fontSize: '0.72rem', padding: '4px 10px', background: 'rgba(16, 185, 129, 0.08)', color: '#34d399', border: '1px solid rgba(16,185,129,0.15)' }}
                         >
-                          Test WA
-                        </button>
-                        <button
-                          className="btn"
-                          onClick={() => handleQuickTest(wish._id, 'SMS')}
-                          disabled={isTesting}
-                          style={{ fontSize: '0.72rem', padding: '4px 8px', background: 'rgba(147, 51, 234, 0.08)', color: '#c084fc', border: '1px solid rgba(147,51,234,0.15)' }}
-                        >
-                          Test SMS
-                        </button>
-                        <button
-                          className="btn"
-                          onClick={() => handleQuickTest(wish._id, 'Email')}
-                          disabled={isTesting}
-                          style={{ fontSize: '0.72rem', padding: '4px 8px', background: 'rgba(59, 130, 246, 0.08)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.15)' }}
-                        >
-                          Test Mail
+                          {isTesting ? 'Sending...' : 'Test WhatsApp'}
                         </button>
                       </div>
 

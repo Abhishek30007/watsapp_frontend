@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Smartphone, Mail, Phone, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
+import { MessageCircle, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
 import { API_BASE } from '../config';
 
 export default function IntegrationStatus() {
@@ -38,9 +38,8 @@ export default function IntegrationStatus() {
   }
 
   const integrations = data?.integrations || {
-    textbee: { configured: false, deviceId: 'Not set' },
-    nodemailer: { configured: false, email: 'Not set' },
-    twilio: { configured: false, phoneNumber: 'Not set' }
+    twilio: { configured: false, phoneNumber: 'Not set' },
+    wappfly: { configured: false, token: 'Not set' }
   };
 
   return (
@@ -63,71 +62,47 @@ export default function IntegrationStatus() {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {/* SMS Gateway */}
+        {/* Twilio WhatsApp */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', 
           background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px'
         }}>
           <div style={{ 
             width: '32px', height: '32px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: integrations.textbee.configured ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)',
-            color: integrations.textbee.configured ? '#34d399' : '#f87171'
+            background: integrations.twilio?.configured ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)',
+            color: integrations.twilio?.configured ? '#34d399' : '#f87171'
           }}>
-            <Smartphone size={16} />
+            <MessageCircle size={16} />
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>TextBee SMS Gateway</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Device: {integrations.textbee.deviceId}</div>
+            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>Twilio WhatsApp Service</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Sender: {integrations.twilio?.phoneNumber}</div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', fontWeight: 600, color: integrations.textbee.configured ? '#34d399' : '#f87171' }}>
-            {integrations.textbee.configured ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
-            <span>{integrations.textbee.configured ? 'Ready' : 'Not Configured'}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', fontWeight: 600, color: integrations.twilio?.configured ? '#34d399' : '#f87171' }}>
+            {integrations.twilio?.configured ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
+            <span>{integrations.twilio?.configured ? 'Ready' : 'Not Configured'}</span>
           </div>
         </div>
 
-        {/* Nodemailer */}
+        {/* Wappfly Gateway */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', 
           background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px'
         }}>
           <div style={{ 
             width: '32px', height: '32px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: integrations.nodemailer.configured ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)',
-            color: integrations.nodemailer.configured ? '#34d399' : '#f87171'
+            background: integrations.wappfly?.configured ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)',
+            color: integrations.wappfly?.configured ? '#34d399' : '#f87171'
           }}>
-            <Mail size={16} />
+            <MessageCircle size={16} />
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>Nodemailer SMTP Server</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              Host: {integrations.nodemailer.email}
-            </div>
+            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>Wappfly WhatsApp Gateway</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Token: {integrations.wappfly?.token}</div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', fontWeight: 600, color: integrations.nodemailer.configured ? '#34d399' : '#f87171' }}>
-            {integrations.nodemailer.configured ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
-            <span>{integrations.nodemailer.configured ? 'Ready' : 'Not Configured'}</span>
-          </div>
-        </div>
-
-        {/* Twilio Voice */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', 
-          background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px'
-        }}>
-          <div style={{ 
-            width: '32px', height: '32px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: integrations.twilio.configured ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)',
-            color: integrations.twilio.configured ? '#34d399' : '#f87171'
-          }}>
-            <Phone size={16} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>Twilio Voice SDK</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Phone: {integrations.twilio.phoneNumber}</div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', fontWeight: 600, color: integrations.twilio.configured ? '#34d399' : '#f87171' }}>
-            {integrations.twilio.configured ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
-            <span>{integrations.twilio.configured ? 'Ready' : 'Not Configured'}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', fontWeight: 600, color: integrations.wappfly?.configured ? '#34d399' : '#f87171' }}>
+            {integrations.wappfly?.configured ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
+            <span>{integrations.wappfly?.configured ? 'Ready' : 'Not Configured'}</span>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { RefreshCw, RotateCcw, Inbox, Smartphone, Mail, Phone, CheckCircle, AlertCircle, Clock, Trash2, MessageCircle } from 'lucide-react';
+import { RefreshCw, RotateCcw, Inbox, CheckCircle, AlertCircle, Clock, Trash2, MessageCircle } from 'lucide-react';
 import { API_BASE } from '../config';
 
 const STATUS_META = {
@@ -122,22 +122,19 @@ export default function HistoryLogs({ addToast }) {
         <div style={{ width: '1px', background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
 
         {/* Channel filters */}
-        {['All', 'SMS', 'WhatsApp', 'Email', 'Voice'].map(c => (
+        {['All', 'WhatsApp'].map(c => (
           <button
             key={c} onClick={() => setChannel(c)}
             style={{
               padding: '6px 14px', borderRadius: '999px', fontSize: '0.8rem', fontWeight: 700,
               cursor: 'pointer', border: '1px solid',
-              background: channel === c ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)',
-              borderColor: channel === c ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.08)',
-              color: channel === c ? '#60a5fa' : 'var(--text-muted)',
+              background: channel === c ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.03)',
+              borderColor: channel === c ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.08)',
+              color: channel === c ? '#34d399' : 'var(--text-muted)',
               transition: 'all 0.2s',
             }}
           >
-            {c === 'SMS' && <Smartphone size={11} style={{ display: 'inline', marginRight: '4px' }} />}
             {c === 'WhatsApp' && <MessageCircle size={11} style={{ display: 'inline', marginRight: '4px' }} />}
-            {c === 'Email' && <Mail size={11} style={{ display: 'inline', marginRight: '4px' }} />}
-            {c === 'Voice' && <Phone size={11} style={{ display: 'inline', marginRight: '4px' }} />}
             {c}
           </button>
         ))}
@@ -174,9 +171,9 @@ export default function HistoryLogs({ addToast }) {
                 </div>
 
                 {/* Channel badge */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: log.channel === 'SMS' ? '#a78bfa' : log.channel === 'WhatsApp' ? '#34d399' : log.channel === 'Voice' ? '#f43f5e' : '#60a5fa', fontSize: '0.78rem', fontWeight: 600, minWidth: '70px' }}>
-                  {log.channel === 'SMS' ? <Smartphone size={13} /> : log.channel === 'WhatsApp' ? <MessageCircle size={13} /> : log.channel === 'Voice' ? <Phone size={13} /> : <Mail size={13} />}
-                  {log.channel}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#34d399', fontSize: '0.78rem', fontWeight: 600, minWidth: '70px' }}>
+                  <MessageCircle size={13} />
+                  {log.channel || 'WhatsApp'}
                 </div>
 
                 {/* Dispatch Type Badge */}

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-  Shield, Smartphone, Phone, Mail, Save, Clock,
-  Calendar, Trash2, Edit, Send, Sparkles, Wand2, MessageCircle
+  Shield, Save, Clock,
+  Calendar, Trash2, Edit, Send, Sparkles, MessageCircle
 } from 'lucide-react';
 import { API_BASE } from '../config';
 
@@ -10,13 +10,7 @@ export default function AdminAlerts({ adminAlerts, loading, onAddOrUpdate, onDel
   // Config state (defaults to localStorage values or verified trial config)
   const [adminName, setAdminName] = useState(localStorage.getItem('adminName') || 'Admin');
   const [adminPhoneNumber, setAdminPhoneNumber] = useState(localStorage.getItem('adminPhoneNumber') || '+13186108740');
-  const [adminEmail, setAdminEmail] = useState(localStorage.getItem('adminEmail') || 'admin@example.com');
   
-  // Default channel choices for alerts
-  const [whatsappPref, setWhatsappPref] = useState(JSON.parse(localStorage.getItem('adminWhatsappPref') || 'true'));
-  const [smsPref, setSmsPref] = useState(JSON.parse(localStorage.getItem('adminSmsPref') || 'false'));
-  const [voicePref, setVoicePref] = useState(JSON.parse(localStorage.getItem('adminVoicePref') || 'false'));
-
   // Alert scheduling states
   const [editingId, setEditingId] = useState(null);
   const [title, setTitle] = useState('');
@@ -26,7 +20,7 @@ export default function AdminAlerts({ adminAlerts, loading, onAddOrUpdate, onDel
   const [polishing, setPolishing] = useState(false);
 
   // Quick testing state
-  const [testingId, setTestingId] = useState(null); // { id, channel }
+  const [testingId, setTestingId] = useState(null);
 
   const handleSavePreferences = (e) => {
     e.preventDefault();
@@ -35,17 +29,9 @@ export default function AdminAlerts({ adminAlerts, loading, onAddOrUpdate, onDel
       addToast('Please provide a valid E.164 phone number (e.g. +13186108740).', 'error');
       return;
     }
-    if (!/^\S+@\S+\.\S+$/.test(adminEmail)) {
-      addToast('Please provide a valid email address.', 'error');
-      return;
-    }
 
     localStorage.setItem('adminName', adminName);
     localStorage.setItem('adminPhoneNumber', adminPhoneNumber);
-    localStorage.setItem('adminEmail', adminEmail);
-    localStorage.setItem('adminWhatsappPref', JSON.stringify(whatsappPref));
-    localStorage.setItem('adminSmsPref', JSON.stringify(smsPref));
-    localStorage.setItem('adminVoicePref', JSON.stringify(voicePref));
 
     addToast('Admin notification preferences saved locally!', 'success');
   };
@@ -105,15 +91,12 @@ export default function AdminAlerts({ adminAlerts, loading, onAddOrUpdate, onDel
     const payload = {
       adminName,
       adminPhoneNumber,
-      adminEmail,
       title,
       scheduledDate: new Date(scheduledDate),
       scheduledTime,
       notes,
       channels: {
-        whatsapp: whatsappPref,
-        sms: smsPref,
-        voiceCall: voicePref
+        whatsapp: true
       },
       status: 'PENDING'
     };
@@ -132,14 +115,13 @@ export default function AdminAlerts({ adminAlerts, loading, onAddOrUpdate, onDel
     setEditingId(null);
   };
 
-  const handleTestAlert = async (alertId, channel) => {
-    setTestingId({ id: alertId, channel });
-    addToast(`Placing manual ${channel} test alert...`, 'success');
+  const handleTestAlert = async (alertId) => {
+    setTestingId(alertId);
+    addToast('Placing manual WhatsApp test alert...', 'success');
     try {
-      const endpoint = channel === 'WhatsApp' ? 'test-whatsapp' : channel === 'SMS' ? 'test-sms' : 'test-voice';
-      const res = await axios.post(`${API_BASE}/admin-alerts/${alertId}/${endpoint}`, { phone: adminPhoneNumber });
+      const res = await axios.post(`${API_BASE}/admin-alerts/${alertId}/test-whatsapp`, { phone: adminPhoneNumber });
       if (res.data.success) {
-        addToast(`✅ Admin test ${channel} delivered successfully!`, 'success');
+        addToast('✅ Admin test WhatsApp delivered successfully!', 'success');
       } else {
         throw new Error(res.data.message);
       }
@@ -191,100 +173,27 @@ export default function AdminAlerts({ adminAlerts, loading, onAddOrUpdate, onDel
                 style={{ fontFamily: 'monospace' }}
               />
             </div>
-            <div className="form-group">
-              <label className="form-label">Notification Email Address</label>
-              <input
-                type="email" className="form-control"
-                value={adminEmail} onChange={e => setAdminEmail(e.target.value)}
-                required
-              />
-            </div>
 
-            {/* Channels preferences toggles */}
+            {/* Channels preferences toggle */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem', marginBottom: '0.5rem' }}>
               
-              {/* WhatsApp Admin Alerts Toggle */}
+              {/* WhatsApp Admin Alerts Indicator */}
               <div 
-                onClick={() => setWhatsappPref(!whatsappPref)}
                 style={{
                   display: 'flex', alignItems: 'center', padding: '0.75rem 1rem',
-                  background: whatsappPref ? 'rgba(16, 185, 129, 0.08)' : 'rgba(255,255,255,0.02)',
-                  border: whatsappPref ? '1px solid rgba(16, 185, 129, 0.25)' : '1px solid rgba(255,255,255,0.06)',
-                  borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', justifyContent: 'space-between'
+                  background: 'rgba(16, 185, 129, 0.08)',
+                  border: '1px solid rgba(16, 185, 129, 0.25)',
+                  borderRadius: '8px', justifyContent: 'space-between'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <MessageCircle size={16} style={{ color: whatsappPref ? 'var(--accent-emerald)' : 'var(--text-muted)' }} />
+                  <MessageCircle size={16} style={{ color: 'var(--accent-emerald)' }} />
                   <div>
                     <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>WhatsApp Alerts</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Primary admin notification path</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Primary admin notification path via Twilio/Wappfly</div>
                   </div>
                 </div>
-                <div style={{
-                  width: '36px', height: '20px', borderRadius: '999px', background: whatsappPref ? 'var(--accent-emerald)' : 'rgba(255,255,255,0.1)',
-                  position: 'relative', transition: 'all 0.2s'
-                }}>
-                  <div style={{
-                    width: '14px', height: '14px', borderRadius: '50%', background: '#fff',
-                    position: 'absolute', top: '3px', left: whatsappPref ? '19px' : '3px', transition: 'all 0.2s'
-                  }} />
-                </div>
-              </div>
-
-              {/* SMS Alerts Toggle */}
-              <div 
-                onClick={() => setSmsPref(!smsPref)}
-                style={{
-                  display: 'flex', alignItems: 'center', padding: '0.75rem 1rem',
-                  background: smsPref ? 'rgba(147, 51, 234, 0.08)' : 'rgba(255,255,255,0.02)',
-                  border: smsPref ? '1px solid rgba(147, 51, 234, 0.25)' : '1px solid rgba(255,255,255,0.06)',
-                  borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', justifyContent: 'space-between'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Smartphone size={16} style={{ color: smsPref ? 'var(--accent-purple)' : 'var(--text-muted)' }} />
-                  <div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>SMS Alerts</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Send SMS text reminders via TextBee</div>
-                  </div>
-                </div>
-                <div style={{
-                  width: '36px', height: '20px', borderRadius: '999px', background: smsPref ? 'var(--accent-purple)' : 'rgba(255,255,255,0.1)',
-                  position: 'relative', transition: 'all 0.2s'
-                }}>
-                  <div style={{
-                    width: '14px', height: '14px', borderRadius: '50%', background: '#fff',
-                    position: 'absolute', top: '3px', left: smsPref ? '19px' : '3px', transition: 'all 0.2s'
-                  }} />
-                </div>
-              </div>
-
-              {/* Voice Call Alerts Toggle */}
-              <div 
-                onClick={() => setVoicePref(!voicePref)}
-                style={{
-                  display: 'flex', alignItems: 'center', padding: '0.75rem 1rem',
-                  background: voicePref ? 'rgba(59, 130, 246, 0.08)' : 'rgba(255,255,255,0.02)',
-                  border: voicePref ? '1px solid rgba(59, 130, 246, 0.25)' : '1px solid rgba(255,255,255,0.06)',
-                  borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', justifyContent: 'space-between'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Phone size={16} style={{ color: voicePref ? '#60a5fa' : 'var(--text-muted)' }} />
-                  <div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>Voice Call Alerts</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Place automated outbound voice calls</div>
-                  </div>
-                </div>
-                <div style={{
-                  width: '36px', height: '20px', borderRadius: '999px', background: voicePref ? '#3b82f6' : 'rgba(255,255,255,0.1)',
-                  position: 'relative', transition: 'all 0.2s'
-                }}>
-                  <div style={{
-                    width: '14px', height: '14px', borderRadius: '50%', background: '#fff',
-                    position: 'absolute', top: '3px', left: voicePref ? '19px' : '3px', transition: 'all 0.2s'
-                  }} />
-                </div>
+                <span className="badge badge-emerald" style={{ fontSize: '0.65rem' }}>Enabled</span>
               </div>
             </div>
 
@@ -417,11 +326,9 @@ export default function AdminAlerts({ adminAlerts, loading, onAddOrUpdate, onDel
                     )}
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                      {/* Active Channels */}
+                      {/* Active Channel */}
                       <div style={{ display: 'flex', gap: '4px' }}>
-                        {alert.channels?.whatsapp && <span className="badge badge-emerald" style={{ fontSize: '0.65rem' }}>WhatsApp</span>}
-                        {alert.channels?.sms && <span className="badge badge-purple" style={{ fontSize: '0.65rem' }}>SMS</span>}
-                        {alert.channels?.voiceCall && <span className="badge badge-blue" style={{ fontSize: '0.65rem' }}>Voice</span>}
+                        <span className="badge badge-emerald" style={{ fontSize: '0.65rem' }}>WhatsApp</span>
                       </div>
 
                       {/* Scheduled Date/Time */}
@@ -435,31 +342,15 @@ export default function AdminAlerts({ adminAlerts, loading, onAddOrUpdate, onDel
 
                     {/* Actions Panel */}
                     <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.75rem', marginTop: '0.75rem', justifyContent: 'space-between' }}>
-                      {/* Quick Test Triggers */}
+                      {/* Quick Test Trigger */}
                       <div style={{ display: 'flex', gap: '6px' }}>
                         <button
                           className="btn"
-                          onClick={() => handleTestAlert(alert._id, 'WhatsApp')}
+                          onClick={() => handleTestAlert(alert._id)}
                           disabled={isTesting}
-                          style={{ fontSize: '0.72rem', padding: '4px 8px', background: 'rgba(16, 185, 129, 0.08)', color: '#34d399', border: '1px solid rgba(16,185,129,0.15)' }}
+                          style={{ fontSize: '0.72rem', padding: '4px 10px', background: 'rgba(16, 185, 129, 0.08)', color: '#34d399', border: '1px solid rgba(16,185,129,0.15)' }}
                         >
-                          Test WA
-                        </button>
-                        <button
-                          className="btn"
-                          onClick={() => handleTestAlert(alert._id, 'SMS')}
-                          disabled={isTesting}
-                          style={{ fontSize: '0.72rem', padding: '4px 8px', background: 'rgba(147, 51, 234, 0.08)', color: '#c084fc', border: '1px solid rgba(147,51,234,0.15)' }}
-                        >
-                          Test SMS
-                        </button>
-                        <button
-                          className="btn"
-                          onClick={() => handleTestAlert(alert._id, 'Voice')}
-                          disabled={isTesting}
-                          style={{ fontSize: '0.72rem', padding: '4px 8px', background: 'rgba(59, 130, 246, 0.08)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.15)' }}
-                        >
-                          Call Me
+                          {isTesting ? 'Sending...' : 'Test WhatsApp'}
                         </button>
                       </div>
 

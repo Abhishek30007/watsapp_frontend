@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import {
-  Bell, Sparkles, Smartphone, CalendarDays,
-  LayoutDashboard, History, Upload, Wand2, Mail, MessageCircle
+  Bell, Sparkles, MessageCircle, AlertCircle,
+  LayoutDashboard, History, Wand2
 } from 'lucide-react';
 import WishesScheduler from './components/WishesScheduler';
 import AdminAlerts    from './components/AdminAlerts';
 import AIWishGenerator from './components/AIWishGenerator';
-import BulkImport      from './components/BulkImport';
 import HistoryLogs     from './components/HistoryLogs';
 import { API_BASE }    from './config';
 
@@ -15,7 +14,6 @@ const TABS = [
   { id: 'wishes',    label: 'Wishes Scheduler', Icon: LayoutDashboard },
   { id: 'reminders', label: 'Admin Alerts',     Icon: Bell },
   { id: 'ai',        label: 'AI Wishes',        Icon: Wand2 },
-  { id: 'import',    label: 'Import',           Icon: Upload },
   { id: 'history',   label: 'History',          Icon: History },
 ];
 
@@ -164,7 +162,7 @@ export default function App() {
           <div className="logo-icon"><MessageCircle size={20} /></div>
           <div>
             <h1 className="logo-text">CelebrateMate</h1>
-            <p className="subtitle">WhatsApp-First Reminders · Gemini AI Prompts · Multi-Channel Dispatch</p>
+            <p className="subtitle">WhatsApp-First Reminders · Gemini AI Prompts · Intelligent Schedulers</p>
           </div>
         </div>
         <span
@@ -243,13 +241,6 @@ export default function App() {
         </div>
       )}
 
-      {/* ── IMPORT TAB ─────────────────────────────────────────────────── */}
-      {activeTab === 'import' && (
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-          <BulkImport addToast={addToast} onImportComplete={() => { fetchWishes(); setActiveTab('wishes'); }} />
-        </div>
-      )}
-
       {/* ── HISTORY TAB ────────────────────────────────────────────────── */}
       {activeTab === 'history' && (
         <HistoryLogs addToast={addToast} />
@@ -261,7 +252,7 @@ export default function App() {
           <div key={toast.id} className={`toast toast-${toast.type}`}>
             {toast.type === 'success'
               ? <Sparkles size={16} style={{ color: 'var(--accent-emerald)' }} />
-              : <Smartphone size={16} style={{ color: 'var(--accent-rose)' }} />
+              : <AlertCircle size={16} style={{ color: 'var(--accent-rose)' }} />
             }
             <div>{toast.message}</div>
           </div>
