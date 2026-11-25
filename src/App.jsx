@@ -2,11 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import {
   Bell, Sparkles, MessageCircle, AlertCircle,
-  LayoutDashboard, History, Wand2
+  LayoutDashboard, History, Wand2, Upload
 } from 'lucide-react';
 import WishesScheduler from './components/WishesScheduler';
 import AdminAlerts    from './components/AdminAlerts';
 import AIWishGenerator from './components/AIWishGenerator';
+import BulkImport      from './components/BulkImport';
 import HistoryLogs     from './components/HistoryLogs';
 import { API_BASE }    from './config';
 
@@ -14,6 +15,7 @@ const TABS = [
   { id: 'wishes',    label: 'Wishes Scheduler', Icon: LayoutDashboard },
   { id: 'reminders', label: 'Admin Alerts',     Icon: Bell },
   { id: 'ai',        label: 'AI Wishes',        Icon: Wand2 },
+  { id: 'import',    label: 'Bulk Import',      Icon: Upload },
   { id: 'history',   label: 'History',          Icon: History },
 ];
 
@@ -238,6 +240,13 @@ export default function App() {
       {activeTab === 'ai' && (
         <div style={{ maxWidth: '680px', margin: '0 auto' }}>
           <AIWishGenerator addToast={addToast} />
+        </div>
+      )}
+
+      {/* ── BULK IMPORT TAB ────────────────────────────────────────────── */}
+      {activeTab === 'import' && (
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          <BulkImport addToast={addToast} onImportComplete={() => { fetchWishes(); setActiveTab('wishes'); }} />
         </div>
       )}
 
